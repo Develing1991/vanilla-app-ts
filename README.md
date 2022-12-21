@@ -1,115 +1,94 @@
-## components/MovieList.js
+## components/MovieListMore.js
 ```javascript
 import { Component } from "../core/core";
-import movieStore from "../store/movie";
-import MovieItem from "./MovieItem";
+import movieStore, { serachMovies } from "../store/movie";
 
-export default class MovieList extends Component{
+export default class MovieListMore extends Component{
   constructor(){
-    super()
-    movieStore.subscribe('movies', () => {
-      this.render()
+    super({
+      tagName: 'button'
+    })
+    movieStore.subscribe('pageMax', ()=> {
+      const { page, pageMax} = movieStore.state
+      pageMax > page 
+        ? this.el.classList.remove('hide') 
+        : this.el.classList.add('hide')
+      
     })
   }
   render(){
-    this.el.classList.add('movie-list')
-    this.el.innerHTML = /*html*/`
-      <div class="movies"></div>
-    `
-    
-    const moviesEl = this.el.querySelector('.movies')
-    moviesEl.append(
-      ...movieStore.state.movies
-        .map( movie => new MovieItem({ movie }).el)
-    )
+    this.el.classList.add('btn', 'view-more', 'hide')
+    this.el.textContent = 'View more...'
+    this.el.addEventListener('click', async () => {
+      await serachMovies(movieStore.state.page + 1)
+    })
   }
 }
 ```
-## components/MovieList.js
+## store/movie.js
 ```javascript
+import { config } from 'dotenv';
+config();
+import { Store } from "../core/core";
+
+const store = new Store({
+  searchText: '',
+  page: 1,
+  pageMax: 1,
+  movies: []
+})
+
+export default store
+export const serachMovies = async page => {
+  store.state.page = page
+  if( page === 1 ){
+    store.state.movies = []
+  }
+  const res = await fetch(`https://www.omdbapi.com/?apikey=${process.env.OMDB_KEY}&s=${store.state.searchText}&page=${page}`)
+  const { Search, totalResults } = await res.json()
+  store.state.movies = [ 
+    ...store.state.movies,
+    ...Search
+  ]
+  store.state.pageMax = Math.ceil(Number(totalResults) / 10)
+}
+```
+
+## routes/Home.js
+```javascript
+import Headline from "../components/Headline";
+import MovieList from "../components/MovieList";
+import MovieListMore from "../components/MovieListMore";
+import Search from "../components/Search";
 import { Component } from "../core/core";
 
-export default class MovieItem extends Component{
-  constructor(props){
-    super({
-      props,
-      tageName: 'a'
-    })
-
-  }
+export default class Home extends Component {
   render(){
-    const { movie } = this.props
-    this.el.setAttribute('href', `#/movie?id=${movie.imdbID}`)
-    this.el.classList.add('movie')
-    this.el.style.backgroundImage = `url(${movie.Poster})`
-    this.el.innerHTML = /*html*/`
-      <div class="info">
-        <div class="year">
-          ${movie.Year}
-        </div>
-        <div class="title">
-          ${movie.Title}
-        </div>
-      </div>
-    `
+    const headline = new Headline().el
+    const search = new Search().el
+    const movielist = new MovieList().el
+    const movielistmore = new MovieListMore().el
+
+    this.el.classList.add('container')
+    this.el.append(
+      headline,
+      search,
+      movielist,
+      movielistmore
+    )
   }
 }
 ```
 
 ## main.css
 ```css
-.movie-list {
-  padding: 20px;
-  border-radius: 4px;
-  background-color: var(--color-area);
-}
-
-.movie-list .movies {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-}
-
-.movies .movie {
-  --width: 200px;
-  width: var(--width);
-  height: calc(var(--width) * 3 / 2);
-  border-radius: 4px;
-  background-color: var(--color-black);
-  background-size: cover;
-  overflow: hidden;
-  position: relative;
-}
-
-.movies .movie:hover::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  border: 6px solid var(--color-primary);
-} 
-
-.movies .movie .info {
+.view-more {
   width: 100%;
-  padding: 14px;
-  box-sizing: border-box;
-  font-size: 14px;
-  text-align: center;
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  background-color: rgba(14, 17, 27, .3);
-  backdrop-filter: blur(10px);
+  max-width: 300px;
+  margin: 20px auto;
+  display: block;
 }
-
-.movies .movie .info .year {
-  color: var(--color-primary);
-}
-
-.movies .movie .info .title {
-  color: var(--color-white);
+.view-more.hide{
+  display: none;
 }
 ```
