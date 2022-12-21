@@ -31,42 +31,66 @@ const store = new Store({
 
 export default store
 export const serachMovies = async page => {
+  if( page === 1 ){
+    store.state.page = 1
+    store.state.movies = []
+  }
   const res = await fetch(`https://www.omdbapi.com/?apikey=${process.env.OMDB_KEY}&s=${store.state.searchText}&page=${page}`)
-  const json = await res.json()
-  console.log(json);
+  const { Search } = await res.json()
+  store.state.movies = [ 
+    ...store.state.movies,
+    ...Search
+  ]
 }
 ```
 
-## components/Search.js
+## components/MovieList.js
 ```javascript
 import { Component } from "../core/core";
-import movieStore, { serachMovies } from "../store/movie";
+import movieStore from "../store/movie";
 
-export default class Search extends Component {
+export default class MovieList extends Component{
+  constructor(){
+    super()
+    movieStore.subscribe('movies', () => {
+      this.render()
+    })
+  }
   render(){
-    this.el.classList.add('search')
+    this.el.classList.add('movie-list')
     this.el.innerHTML = /*html*/`
-      <input placeholder="Enter th movie title to search!"/>
-      <button class="btn btn-primary">
-        Search!
-      </button>
+      <div class="movies"></div>
     `
+    const moviesEl = this.el.querySelector('.movies')
+    moviesEl.append(
+      movieStore.state.movies
+        .map( movie => {
+          return movie.Title
+        })
+    )
+  }
+}
+```
 
-    const inputEl = this.el.querySelector('input');
-    inputEl.addEventListener('input', () => {
-      movieStore.state.searchText = inputEl.value
-    })
-    inputEl.addEventListener('keydown', (event) => {
-      if(event.key === 'Enter' && movieStore.state.searchText.trim()){
-        serachMovies(1)
-      }
-    })
-    const buttonEl = this.el.querySelector('button')
-    buttonEl.addEventListener('click', () => {
-      if(movieStore.state.searchText.trim()){
-        serachMovies(1)
-      }
-    })
+## Home.js
+```javascript
+import Headline from "../components/Headline";
+import MovieList from "../components/MovieList";
+import Search from "../components/Search";
+import { Component } from "../core/core";
+
+export default class Home extends Component {
+  render(){
+    const headline = new Headline().el
+    const search = new Search().el
+    const movielist = new MovieList().el
+
+    this.el.classList.add('container')
+    this.el.append(
+      headline,
+      search,
+      movielist
+    )
   }
 }
 ```
