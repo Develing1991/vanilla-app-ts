@@ -41,33 +41,28 @@ export default class MovieList extends Component{
 }
 ```
 
-## components/MovieLMovieLististMore.js
+## routes/Movie.js
 ```javascript
 import { Component } from "../core/core";
-import movieStore, { serachMovies } from "../store/movie";
+import movieStore, { getMovieDetails } from "../store/movie";
 
-export default class MovieListMore extends Component{
-  constructor(){
-    super({
-      tagName: 'button'
-    })
-    movieStore.subscribe('pageMax', ()=> {
-      const { page, pageMax} = movieStore.state
-      pageMax > page 
-        ? this.el.classList.remove('hide') 
-        : this.el.classList.add('hide')
-      
-    })
-  }
-  render(){
-    this.el.classList.add('btn', 'view-more', 'hide')
-    this.el.textContent = 'View more...'
-    this.el.addEventListener('click', async () => {
-      this.el.classList.add('hide')
-      await serachMovies(movieStore.state.page + 1)
-    })
+export default class  Movie extends Component {
+  async render(){
+    await getMovieDetails(history.state.id)
+    console.log(movieStore.state.movie);
   }
 }
+```
+
+## routes/index.js
+```javascript
+import { createRouter } from "../core/core";
+import Home from  './Home'
+import Movie from  './Movie'
+export default createRouter([
+  { path:'#/', component: Home },
+  { path:'#/movie', component: Movie },
+])
 ```
 
 ## store/movie.js
@@ -77,47 +72,21 @@ config();
 import { Store } from "../core/core";
 
 const store = new Store({
-  searchText: '',
-  page: 1,
-  pageMax: 1,
-  movies: [],
-  loading: false,
-  message: 'Search for the movie title!'
+  ...(중략)
+  movie: {}, // 상세
 })
 
 export default store
 export const serachMovies = async page => {
-  store.state.loading = true
-  store.state.page = page
-  if( page === 1 ){
-    store.state.movies = []
-    store.state.message = ''
-  }
-  try {
-    const res = await fetch(`https://www.omdbapi.com/?apikey=${process.env.OMDB_KEY}&s=${store.state.searchText}&page=${page}`)
-    const { Search, totalResults, Response, Error } = await res.json()
-    if(Response === 'True'){
-      store.state.movies = [ 
-        ...store.state.movies,
-        ...Search
-      ]
-      store.state.pageMax = Math.ceil(Number(totalResults) / 10)
-    }else{
-      store.state.message = Error
-    }
-  } catch (error) {
-    console.error('searchMovies error:', error);
-  } finally {
-    store.state.loading = false
-  }
+  ...(중략)
 }
-```
 
-## main.css
-```css
-.movie-list .message {
-  color: var(--color-primary);
-  font-size: 20px;
-  text-align: center;
+export const getMovieDetails = async id => {
+  try {
+    const res = await fetch(`https://www.omdbapi.com/?apikey=${process.env.OMDB_KEY}&i=${id}&plot=full`)
+    store.state.movie = await res.json()
+  } catch (error) {
+    console.error('getMovieDetails error: ', error);
+  }
 }
 ```
