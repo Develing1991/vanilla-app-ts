@@ -1,66 +1,123 @@
 ## routes/Home.js
 ```javascript
 import Headline from "../components/Headline";
+import Search from "../components/Search"; // 추가
 import { Component } from "../core/core";
 
 export default class Home extends Component {
   render(){
     const headline = new Headline().el
+    const search = new Search().el // 추가
+
     this.el.classList.add('container')
     this.el.append(
-      headline
+      headline,
+      search // 추가
     )
   }
 }
 ```
 
-## components/Headline.js
+## components/Search.js
 ```javascript
 import { Component } from "../core/core";
 
-export default class Headline extends Component {
+export default class Search extends Component {
   render(){
-    this.el.classList.add('headline')
+    this.el.classList.add('search')
     this.el.innerHTML = /*html*/`
-      <h1>
-        <span>OBDb API</span><br>
-        THE OPEN<br>
-        MOVIE DATABASE
-      </h1>
-      <p>
-        The OMDb API is a RESTful web service to obtain movie information, 
-        all content and images on the site are contributed and maintained by our users.
-        If you find this service useful, please consider making a one-time donation or become a patron.
-      </p>
+      <input placeholder="Enter th movie title to search!"/>
+      <button class="btn btn-primary">
+        Search!
+      </button>
     `
+    const inputEl = this.el.querySelector('input');
+    inputEl.addEventListener('input', () => {
+      //
+    })
+    inputEl.addEventListener('keydown', (event) => {
+      if(event.key === 'Enter'){
+
+      }
+    })
+    const buttonEl = this.el.querySelector('button')
+    buttonEl.addEventListener('click', () => {
+      //
+    })
   }
 }
 ```
 
 ## main.css
 ```css
-.container {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 40px 0;
+html {
+  --color-black: #0E111B;
+  --color-white: #FFF;
+  --color-white-50: rgba(255, 255, 255, .5);
+  --color-white-30: rgba(255, 255, 255, .3);
+  --color-white-20: rgba(255, 255, 255, .2);
+  --color-white-10: rgba(255, 255, 255, .1);
+  --color-white-5: rgba(255, 255, 255, .0.5);
+  --color-primary: #fdc000;
+  --color-hover: #f86a05;
+  --color-area: #1c212e;
 }
 
-.headline {
-  margin-bottom: 40px;
+...
+
+.btn {
+  height: 50px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 4px;
+  outline: none;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-white);
+  background-color: var(--color-area);
+  cursor: pointer;
+  transition: .3s;
 }
 
-.headline h1 {
-  font-family: 'Oswald', sans-serif;
-  font-size: 80px;
-  line-height: 1;
-  margin-bottom: 40px;
+.btn:hover{
+  background-color: var(--color-hover);
 }
 
-.headline h1 span {
-  color: var(--color-primary);
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-black)
 }
 
-.headline p {
+.btn-primary:hover {
+  background-color: var(--color-hover);
+  color: var(--color-white)
+}
+
+...
+
+.search {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.search input{
+  flex-grow: 1;
+  height: 50px;
+  padding: 0 20px;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: var(--color-white);
+  background-color: var(--color-area);
+}
+
+.search input::placeholder {
   color: var(--color-white-30);
+}
+
+.search .btn {
+  flex-grow: 1;
+  max-width: 150px;
 }
 ```
