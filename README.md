@@ -1,6 +1,4 @@
-[코드펜 loading 예제](https://codepen.io/Develing1991/pen/MWBYraz)
-
-## components/MovieLMovieLististMore.js
+## components/MovieListMore.js
 ```javascript
 import { Component } from "../core/core";
 import movieStore from "../store/movie";
@@ -15,16 +13,22 @@ export default class MovieList extends Component{
     movieStore.subscribe('loading', () => {
       this.render()
     })
+    movieStore.subscribe('message', () => {
+      this.render()
+    })
   }
   render(){
     this.el.classList.add('movie-list')
     this.el.innerHTML = /*html*/`
-      <div class="movies"></div>
+      ${ movieStore.state.message 
+          ? `<div class="message">${movieStore.state.message}</div>`
+          : `<div class="movies"></div>`
+        }
       <div class="the-loader hide"></div>
     `
     
     const moviesEl = this.el.querySelector('.movies')
-    moviesEl.append(
+    moviesEl?.append(
       ...movieStore.state.movies
         .map( movie => new MovieItem({ movie }).el)
     )
@@ -33,6 +37,35 @@ export default class MovieList extends Component{
     movieStore.state.loading 
       ? loaderEl.classList.remove('hide') 
       : loaderEl.classList.add('hide') 
+  }
+}
+```
+
+## components/MovieLMovieLististMore.js
+```javascript
+import { Component } from "../core/core";
+import movieStore, { serachMovies } from "../store/movie";
+
+export default class MovieListMore extends Component{
+  constructor(){
+    super({
+      tagName: 'button'
+    })
+    movieStore.subscribe('pageMax', ()=> {
+      const { page, pageMax} = movieStore.state
+      pageMax > page 
+        ? this.el.classList.remove('hide') 
+        : this.el.classList.add('hide')
+      
+    })
+  }
+  render(){
+    this.el.classList.add('btn', 'view-more', 'hide')
+    this.el.textContent = 'View more...'
+    this.el.addEventListener('click', async () => {
+      this.el.classList.add('hide')
+      await serachMovies(movieStore.state.page + 1)
+    })
   }
 }
 ```
@@ -49,6 +82,7 @@ const store = new Store({
   pageMax: 1,
   movies: [],
   loading: false,
+  message: 'Search for the movie title!'
 })
 
 export default store
@@ -57,36 +91,33 @@ export const serachMovies = async page => {
   store.state.page = page
   if( page === 1 ){
     store.state.movies = []
+    store.state.message = ''
   }
-  const res = await fetch(`https://www.omdbapi.com/?apikey=${process.env.OMDB_KEY}&s=${store.state.searchText}&page=${page}`)
-  const { Search, totalResults } = await res.json()
-  store.state.movies = [ 
-    ...store.state.movies,
-    ...Search
-  ]
-  store.state.pageMax = Math.ceil(Number(totalResults) / 10)
-  store.state.loading = false
+  try {
+    const res = await fetch(`https://www.omdbapi.com/?apikey=${process.env.OMDB_KEY}&s=${store.state.searchText}&page=${page}`)
+    const { Search, totalResults, Response, Error } = await res.json()
+    if(Response === 'True'){
+      store.state.movies = [ 
+        ...store.state.movies,
+        ...Search
+      ]
+      store.state.pageMax = Math.ceil(Number(totalResults) / 10)
+    }else{
+      store.state.message = Error
+    }
+  } catch (error) {
+    console.error('searchMovies error:', error);
+  } finally {
+    store.state.loading = false
+  }
 }
 ```
 
 ## main.css
 ```css
-.the-loader{
-  width: 30px;
-  height: 30px;
-  margin:30px auto;
-  border: 4px solid var(--color-primary);
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: loader 1s infinite linear;
-}
-
-.the-loader.hide{
-  display: none;
-}
-
-@keyframes loader {
-  0% { transform:rotate(0deg) }
-  100% { transform:rotate(360deg) }
+.movie-list .message {
+  color: var(--color-primary);
+  font-size: 20px;
+  text-align: center;
 }
 ```
