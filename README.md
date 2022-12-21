@@ -1,46 +1,3 @@
-## components/MovieListMore.js
-```javascript
-import { Component } from "../core/core";
-import movieStore from "../store/movie";
-import MovieItem from "./MovieItem";
-
-export default class MovieList extends Component{
-  constructor(){
-    super()
-    movieStore.subscribe('movies', () => {
-      this.render()
-    })
-    movieStore.subscribe('loading', () => {
-      this.render()
-    })
-    movieStore.subscribe('message', () => {
-      this.render()
-    })
-  }
-  render(){
-    this.el.classList.add('movie-list')
-    this.el.innerHTML = /*html*/`
-      ${ movieStore.state.message 
-          ? `<div class="message">${movieStore.state.message}</div>`
-          : `<div class="movies"></div>`
-        }
-      <div class="the-loader hide"></div>
-    `
-    
-    const moviesEl = this.el.querySelector('.movies')
-    moviesEl?.append(
-      ...movieStore.state.movies
-        .map( movie => new MovieItem({ movie }).el)
-    )
-
-    const loaderEl = this.el.querySelector('.the-loader')
-    movieStore.state.loading 
-      ? loaderEl.classList.remove('hide') 
-      : loaderEl.classList.add('hide') 
-  }
-}
-```
-
 ## routes/Movie.js
 ```javascript
 import { Component } from "../core/core";
@@ -50,43 +7,95 @@ export default class  Movie extends Component {
   async render(){
     await getMovieDetails(history.state.id)
     console.log(movieStore.state.movie);
+    const {movie} = movieStore.state
+    this.el.classList.add('container', 'the-movie')
+    this.el.innerHTML = /*html*/`
+      <div 
+        style="background-image: url(${movie.Poster})" 
+        class="poster">
+      </div>
+      <div class="specs">
+        <div class="title">
+          ${movie.Title}
+        </div>
+        <div class="labels">
+          <span>${movie.Released}</span>
+          &nbsp;/&nbsp;
+          <span>${movie.Runtime}</span>
+          &nbsp;/&nbsp;
+          <span>${movie.Country}</span>
+        </div>
+        <div class="plot">
+          ${movie.Plot}
+        </div>
+        <div>
+          <h3>Ratings</h3>
+          ${movie.Ratings.map(rating => {
+            return `<p>${rating.Source} - ${rating.Value}</p>`
+          }).join('')}
+        </div>
+        <div>
+          <h3>Actors</h3>
+          <p>${movie.Actors}</p>
+        </div>
+        <div>
+          <h3>Director</h3>
+          <p>${movie.Director}</p>
+        </div>
+        <div>
+          <h3>Production</h3>
+          <p>${movie.Production}</p>
+        </div>
+        <div>
+          <h3>Genre</h3>
+          <p>${movie.Genre}</p>
+        </div>
+      </div>
+    `
   }
 }
 ```
 
-## routes/index.js
-```javascript
-import { createRouter } from "../core/core";
-import Home from  './Home'
-import Movie from  './Movie'
-export default createRouter([
-  { path:'#/', component: Home },
-  { path:'#/movie', component: Movie },
-])
-```
 
-## store/movie.js
-```javascript
-import { config } from 'dotenv';
-config();
-import { Store } from "../core/core";
-
-const store = new Store({
-  ...(중략)
-  movie: {}, // 상세
-})
-
-export default store
-export const serachMovies = async page => {
-  ...(중략)
+## main.css
+```css
+.the-movie {
+  color: var(--color-white-50);
+  display: flex;
+  gap: 70px;
 }
 
-export const getMovieDetails = async id => {
-  try {
-    const res = await fetch(`https://www.omdbapi.com/?apikey=${process.env.OMDB_KEY}&i=${id}&plot=full`)
-    store.state.movie = await res.json()
-  } catch (error) {
-    console.error('getMovieDetails error: ', error);
-  }
+.the-movie .poster {
+  flex-shrink: 0;
+  --width:500px;
+  width: var(--width);
+  height: calc(var(--width) * 3 / 2);
+  border-radius: 10px;
+  background-size: cover;
+  background-color: var(--color-area);
+}
+
+.the-movie .specs {
+  flex-grow: 1;
+}
+.the-movie .title {
+  font-size: 70px;
+  font-family: "Oswald", "sans-serif";
+  line-height: 1;
+  color: var(--color-white);
+  margin-bottom: 30px;
+}
+.the-movie .labels {
+  color: var(--color-primary);
+  margin-bottom: 20px;
+}
+.the-movie .plot {
+
+}
+.the-movie h3 {
+  font-size: 20px;
+  font-family: "Oswald", "sans-serif";
+  color: var(--color-white);
+  margin: 24px 0 6px;
 }
 ```
