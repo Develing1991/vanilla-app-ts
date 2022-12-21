@@ -1,53 +1,8 @@
-## dotenv 설치
-```bash
-& npm i dotenv
-```
-## .gitignore 설정 추가
-```
-...(중략)
-.env
-```
-
-
-[OMDB API KEY 발급 링크](https://www.omdbapi.com/apikey.aspx)
-
-## .evn파일 생성 및 작성
-```plaintext
-OMDB_KEY=YOUR_KEY
-```
-
-
-## store/movie.js
-```javascript
-import { config } from 'dotenv';
-config();
-import { Store } from "../core/core";
-
-const store = new Store({
-  searchText: '',
-  page: 1,
-  movies: []
-})
-
-export default store
-export const serachMovies = async page => {
-  if( page === 1 ){
-    store.state.page = 1
-    store.state.movies = []
-  }
-  const res = await fetch(`https://www.omdbapi.com/?apikey=${process.env.OMDB_KEY}&s=${store.state.searchText}&page=${page}`)
-  const { Search } = await res.json()
-  store.state.movies = [ 
-    ...store.state.movies,
-    ...Search
-  ]
-}
-```
-
 ## components/MovieList.js
 ```javascript
 import { Component } from "../core/core";
 import movieStore from "../store/movie";
+import MovieItem from "./MovieItem";
 
 export default class MovieList extends Component{
   constructor(){
@@ -61,36 +16,100 @@ export default class MovieList extends Component{
     this.el.innerHTML = /*html*/`
       <div class="movies"></div>
     `
+    
     const moviesEl = this.el.querySelector('.movies')
     moviesEl.append(
-      movieStore.state.movies
-        .map( movie => {
-          return movie.Title
-        })
+      ...movieStore.state.movies
+        .map( movie => new MovieItem({ movie }).el)
     )
   }
 }
 ```
-
-## Home.js
+## components/MovieList.js
 ```javascript
-import Headline from "../components/Headline";
-import MovieList from "../components/MovieList";
-import Search from "../components/Search";
 import { Component } from "../core/core";
 
-export default class Home extends Component {
-  render(){
-    const headline = new Headline().el
-    const search = new Search().el
-    const movielist = new MovieList().el
+export default class MovieItem extends Component{
+  constructor(props){
+    super({
+      props,
+      tageName: 'a'
+    })
 
-    this.el.classList.add('container')
-    this.el.append(
-      headline,
-      search,
-      movielist
-    )
   }
+  render(){
+    const { movie } = this.props
+    this.el.setAttribute('href', `#/movie?id=${movie.imdbID}`)
+    this.el.classList.add('movie')
+    this.el.style.backgroundImage = `url(${movie.Poster})`
+    this.el.innerHTML = /*html*/`
+      <div class="info">
+        <div class="year">
+          ${movie.Year}
+        </div>
+        <div class="title">
+          ${movie.Title}
+        </div>
+      </div>
+    `
+  }
+}
+```
+
+## main.css
+```css
+.movie-list {
+  padding: 20px;
+  border-radius: 4px;
+  background-color: var(--color-area);
+}
+
+.movie-list .movies {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+.movies .movie {
+  --width: 200px;
+  width: var(--width);
+  height: calc(var(--width) * 3 / 2);
+  border-radius: 4px;
+  background-color: var(--color-black);
+  background-size: cover;
+  overflow: hidden;
+  position: relative;
+}
+
+.movies .movie:hover::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  border: 6px solid var(--color-primary);
+} 
+
+.movies .movie .info {
+  width: 100%;
+  padding: 14px;
+  box-sizing: border-box;
+  font-size: 14px;
+  text-align: center;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  background-color: rgba(14, 17, 27, .3);
+  backdrop-filter: blur(10px);
+}
+
+.movies .movie .info .year {
+  color: var(--color-primary);
+}
+
+.movies .movie .info .title {
+  color: var(--color-white);
 }
 ```
