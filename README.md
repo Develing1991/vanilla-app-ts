@@ -1,52 +1,32 @@
-## components/TheFooter.js
+## routes/index.js
 ```javascript
-import { Component } from "../core/core";
-import aboutStore from "../store/about";
+import { createRouter } from "../core/core";
+import Home from  './Home'
+import Movie from  './Movie'
+import About from  './About'
+import NotFound from './NotFound'
 
-export default class TheFooter extends Component {
-  constructor(){
-    super({
-      tagName:'footer'
-    })
-  }
-  render(){
-    const { github, repository } = aboutStore.state;
-    this.el.innerHTML = /*html*/`
-      <div>
-        <a href="${repository}">
-          Github Repository
-        </a>
-      </div>
-      <div>
-        <a href="${github}">
-          ${new Date().getFullYear()}
-          Develing1991
-        </a>
-      </div>
-
-    `
-  }
-}
+export default createRouter([
+  { path:'#/', component: Home },
+  { path:'#/movie', component: Movie },
+  { path:'#/about', component: About },
+  { path:'.*', component: NotFound },
+  //{ path:'.{0,}', component: NotFound },
+])
 ```
 
-## routes/About.js
+## routes/NotFound.js
 ```javascript
 import { Component } from "../core/core";
-import aboutStore from "../store/about";
 
-export default class About extends Component{
+export default class NotFound extends Component{
   render(){
-    const { photo, name, email, github, blog} = aboutStore.state
-    this.el.classList.add('container', 'about')
+    this.el.classList.add('container', 'not-found')
     this.el.innerHTML = /*html*/`
-      <div style="background-image:url(${photo})"class="photo"></div>
-      <p class="name">${name}</p>
-      <p>
-        <a href="https://mail.google.com/mail/?view=cm&fs=1&to=${email}" 
-          target="_black">${email}</a>
-      </p>
-      <p><a href="${github}" target="_black">GitHub</a></p>
-      <p><a href="${blog}" target="_black">Blog</a></p>
+      <h1>
+        Sorry.. <br>
+        Page Not Found.
+      </h1>
     `
   }
 }
@@ -66,51 +46,12 @@ export default new Store({
 })
 ```
 
-## App.js
-```javascript
-import TheHeader from "./components/TheHeader";
-import TheFooter from "./components/TheFooter";
-import { Component } from "./core/core";
-
-export default class App extends Component {
-  render(){
-    const theHeader = new TheHeader().el
-    const theFooter = new TheFooter().el
-    const routerView = document.createElement('router-view')
-    this.el.append( 
-      theHeader,
-      routerView,
-      theFooter
-    )
-  }
-}
-```
-
-
 ## main.css
 ```css
-.about .photo{
-  width: 230px;
-  height: 230px;
-  margin: 0 auto 20px;
-  border-radius: 20px;
-  background-size: cover;
-}
-.about .name{
-  font-size: 40px;
-  font-family: "Oswald", "sans-serif";
-  margin-bottom: 20px;
-}
-.about p{
-  line-height: 1.5;
+.not-found h1 {
+  font-size: 70px;
+  font-weight: 700;
+  color: var(--color-white-10);
   text-align: center;
-  margin-bottom: 4px;
-}
-.about a{
-  color: var(--color-primary);
-  text-decoration: none;
-}
-.about a:hover{
-  text-decoration: underline;
 }
 ```
