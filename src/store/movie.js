@@ -1,5 +1,3 @@
-import { config } from 'dotenv';
-config();
 import { Store } from "../core/core";
 
 const store = new Store({
@@ -21,7 +19,14 @@ export const serachMovies = async page => {
     store.state.message = ''
   }
   try {
-    const res = await fetch(`https://www.omdbapi.com/?apikey=${process.env.OMDB_KEY}&s=${store.state.searchText}&page=${page}`)
+    // 서버리스 함수로 대체
+    const res = await fetch(`/api/movie`, {
+      method: 'POST',
+      body: JSON.stringify({
+        title: store.state.searchText,
+        page
+      })
+    })
     const { Search, totalResults, Response, Error } = await res.json()
     if(Response === 'True'){
       store.state.movies = [ 
@@ -41,7 +46,13 @@ export const serachMovies = async page => {
 
 export const getMovieDetails = async id => {
   try {
-    const res = await fetch(`https://www.omdbapi.com/?apikey=${process.env.OMDB_KEY}&i=${id}&plot=full`)
+    // 서버리스 함수로 대체
+    const res = await fetch(`/api/movie`, {
+      method: 'POST',
+      body: JSON.stringify({
+        id,
+      })
+    })
     store.state.movie = await res.json()
   } catch (error) {
     console.error('getMovieDetails error: ', error);
