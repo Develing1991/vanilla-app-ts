@@ -1,5 +1,14 @@
 import { Component } from "../core/core";
+interface State {
+  [key: string]: unknown
+  menus: {
+    name: string
+    href: string
+  }[]
+}
 export default class TheHeader extends Component{
+  // public state = {} as State // 이렇게 단언하면 다음 렌더시 빈 객체가 되어버리니까..
+  public state!: State // 할당 단언으로 ! 해줌 타입핑은 해줘야하고 ({}로 초기화는 안하게 되니까)
   constructor(){
     super({
       tagName: 'header',
